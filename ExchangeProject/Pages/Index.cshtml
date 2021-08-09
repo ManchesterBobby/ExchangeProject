@@ -1,0 +1,149 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery AntiForgery
+
+@Html.AntiForgeryToken()
+
+<form method="post">
+    <div style="display: flex; justify-content: space-between;">
+        <div>
+            <button type="submit" class="btn btn-primary btn-sm" id="btnSearch">Search</button>
+        </div>
+        <div>
+            <label class="search-items-labels" for="pileNumber">Pile Number</label>
+            <input asp-for="SelectedPileNumber" type="text" class="search-items" id="pileNumber" />
+        </div>
+        <div>
+            <label for="searchLocation">Location</label>
+            <select id="searchLocation" asp-items="Model.Locations" asp-for="SelectedLocation" onchange="FilterWarehouseByLocation()">
+                <option value=""></option>
+            </select>
+        </div>
+        <div>
+            <label for="searchCommodity">Commodity</label>
+            <select id="searchCommodity" asp-items="Model.Commodities" asp-for="SelectedCommodity" onchange="FilterWarehouseByCommodity()">
+                <option value=""></option>
+            </select>
+        </div>
+        <div>
+            <label for="searchWarehouse">Warehouse</label>
+            <select id="searchWarehouse" asp-items="Model.Warehouses" asp-for="SelectedWarehouse">
+                <option value=""></option>
+            </select>
+        </div>
+
+    </div>
+
+
+    <table id="pileGrid" class="table table-striped table-bordered table-responsive">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].PileNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].CommodityName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].WarehouseName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].LocationName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].Weight)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PilesList[0].GrossWeight)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.PilesList)
+            {
+                <tr>
+                    <td> @Html.DisplayFor(modelItem => item.PileNumber) </td>
+                    <td> @Html.DisplayFor(modelItem => item.CommodityName) </td>
+                    <td> @Html.DisplayFor(modelItem => item.WarehouseName) </td>
+                    <td> @Html.DisplayFor(modelItem => item.LocationName) </td>
+                    <td> @Html.DisplayFor(modelItem => item.Weight) </td>
+                    <td> @Html.DisplayFor(modelItem => item.GrossWeight) </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</form>
+@section Scripts{
+    <script>
+
+        $('#btnSearch').click(function () {
+            if ($('#pileNumber').val() == "" &&
+                $('#searchLocation :selected').val() == 0 &&
+                $('#searchCommodity :selected').val() == 0 &&
+                $('#searchWarehouse :selected').val() == 0) {
+                alert('At least one search criteria must be entered');
+                event.preventDefault();
+
+                return;
+            };
+        });
+
+        function FilterWarehouseByLocation() {
+            $.ajax({
+                url: "?handler=FilterWarehouseByLocation",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: "json",
+                data: {
+                    location: $('#searchLocation  :selected').val(),
+                },
+                success: function (data) {
+                    $("#searchWarehouse option").remove();
+                    $.each(data.Warehouses, function (index, item) {
+                        $("#searchWarehouse").append(
+                            $("<option></option>")
+                                .text(item.Name)
+                                .val(item.WarehouseId)
+                        );
+                    });
+                },
+                error: function () {
+                }
+            });
+
+        }
+
+        function FilterWarehouseByCommodity() {
+            $.ajax({
+                url: "?handler=FilterWarehouseByCommodity",
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                datatype: "json",
+                data: {
+                    commodity: $('#searchCommodity :selected').val(),
+                },
+                success: function (data) {
+                    $("#searchWarehouse option").remove();
+                    $.each(data.Warehouses, function (index, item) {
+                        $("#searchWarehouse").append(
+                            $("<option></option>")
+                                .text(item.Name)
+                                .val(item.WarehouseId)
+                        );
+                    });
+                },
+                error: function () {
+                }
+            });
+
+        }
+
+    </script>
+
+}
